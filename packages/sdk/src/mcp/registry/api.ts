@@ -9,7 +9,7 @@ import {
   SSEConnectionSchema,
   WebsocketConnectionSchema,
 } from "../../models/mcp.ts";
-import type { QueryResult } from "../../storage/index.ts";
+import type { Json, QueryResult } from "../../storage/index.ts";
 import {
   assertHasWorkspace,
   assertWorkspaceResourceAccess,
@@ -33,6 +33,7 @@ const SELECT_REGISTRY_APP_QUERY = `
   id,
   workspace,
   scope_id,
+  metadata,
   name,
   description,
   icon,
@@ -100,6 +101,7 @@ const RegistryAppSchema = z.object({
   friendlyName: z.string().optional(),
   verified: z.boolean().optional(),
   tools: z.array(RegistryToolSchema).optional(),
+  metadata: z.record(z.unknown()).optional().nullable(),
 });
 
 export type RegistryScope = {
@@ -111,6 +113,17 @@ export type RegistryScope = {
 };
 
 export type RegistryApp = z.infer<typeof RegistryAppSchema>;
+
+export const AppName = {
+  build: (scopeName: string, name: string) => `@${scopeName}/${name}`,
+  parse: (appName: string) => {
+    const parts = appName.split("/");
+    return {
+      scopeName: parts[0],
+      name: parts[1],
+    };
+  },
+};
 
 const Mappers = {
   toRegistryScope: (
@@ -152,7 +165,10 @@ const Mappers = {
       scopeId: data.scope_id,
       scopeName: data.deco_chat_registry_scopes.scope_name,
       name: data.name,
-      appName: `${data.deco_chat_registry_scopes.scope_name}/${data.name}`,
+      appName: AppName.build(
+        data.deco_chat_registry_scopes.scope_name,
+        data.name,
+      ),
       friendlyName: data.friendly_name ?? undefined,
       description: data.description ?? undefined,
       icon: data.icon ?? undefined,
@@ -161,6 +177,7 @@ const Mappers = {
       updatedAt: data.updated_at,
       unlisted: data.unlisted,
       verified: data.verified ?? false,
+      metadata: data.metadata as Record<string, unknown> | undefined,
       tools,
     };
   },
@@ -298,7 +315,9 @@ export const getRegistryApp = createTool({
     if (!data) {
       throw new UserInputError("App not found");
     }
-    return Mappers.toRegistryApp(data!);
+    const s = Mappers.toRegistryApp(data!);
+    console.log({ s });
+    return s;
   },
 });
 export const listRegistryApps = createTool({
@@ -393,6 +412,7 @@ export const publishApp = createTool({
     connection: MCPConnectionSchema.describe(
       "The MCP connection configuration for the app",
     ),
+    metadata: z.record(z.unknown()).optional().describe("Metadata for the app"),
     unlisted: z
       .boolean()
       .optional()
@@ -408,6 +428,7 @@ export const publishApp = createTool({
       connection,
       unlisted,
       friendlyName,
+      metadata,
     },
     c,
   ) => {
@@ -434,6 +455,7 @@ export const publishApp = createTool({
           scope_id: scopeId,
           friendly_name: friendlyName?.trim() || null,
           name: name.trim(),
+          metadata: metadata as Json,
           description: description?.trim() || null,
           icon: icon?.trim() || null,
           connection,

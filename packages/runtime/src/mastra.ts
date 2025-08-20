@@ -9,8 +9,8 @@ import {
 } from "@mastra/core";
 import { RuntimeContext } from "@mastra/core/di";
 import {
-  createStep as mastraCreateStep,
   createWorkflow,
+  createStep as mastraCreateStep,
   type DefaultEngineType,
   type ExecuteFunction,
   type Step as MastraStep,
@@ -19,7 +19,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { DefaultEnv } from "./index.ts";
-import { State } from "./state.ts";
+import { createStateValidationTool, State } from "./state.ts";
 export { createWorkflow };
 
 export { cloneStep, cloneWorkflow } from "@mastra/core/workflows";
@@ -221,11 +221,18 @@ export interface ViewExport {
   url: string;
 }
 
+export interface Integration {
+  id: string;
+  appId: string;
+}
 export interface CreateMCPServerOptions<
   Env = any,
   TSchema extends z.ZodTypeAny = never,
 > {
-  oauth?: { state?: TSchema; scopes?: string[] };
+  oauth?: {
+    state?: TSchema;
+    scopes?: string[];
+  };
   views?: (
     env: Env & DefaultEnv<TSchema>,
   ) => Promise<ViewExport[]> | ViewExport[];
@@ -255,30 +262,32 @@ export interface AppContext<TEnv = any> {
   req?: Request;
 }
 
-const decoChatOAuthToolFor = <TSchema extends z.ZodTypeAny = never>({
+const decoChatOAuthToolsFor = <TSchema extends z.ZodTypeAny = never>({
   state: schema,
   scopes,
 }: CreateMCPServerOptions<any, TSchema>["oauth"] = {}) => {
   const jsonSchema = schema
     ? zodToJsonSchema(schema)
     : { type: "object", properties: {} };
-  return createTool({
-    id: "DECO_CHAT_OAUTH_START",
-    description: "OAuth for Deco Chat",
-    inputSchema: z.object({
-      returnUrl: z.string(),
+  return [
+    createTool({
+      id: "DECO_CHAT_OAUTH_START",
+      description: "OAuth for Deco Chat",
+      inputSchema: z.object({
+        returnUrl: z.string(),
+      }),
+      outputSchema: z.object({
+        stateSchema: z.any(),
+        scopes: z.array(z.string()).optional(),
+      }),
+      execute: () => {
+        return Promise.resolve({
+          stateSchema: jsonSchema,
+          scopes,
+        });
+      },
     }),
-    outputSchema: z.object({
-      stateSchema: z.any(),
-      scopes: z.array(z.string()).optional(),
-    }),
-    execute: () => {
-      return Promise.resolve({
-        stateSchema: jsonSchema,
-        scopes,
-      });
-    },
-  });
+  ];
 };
 
 const createWorkflowTools = <TEnv = any, TSchema extends z.ZodTypeAny = never>(
@@ -418,7 +427,8 @@ export const createMCPServer = <
         .flat() ?? [];
 
     tools.push(...workflowTools);
-    tools.push(decoChatOAuthToolFor<TSchema>(options.oauth));
+    tools.push(...decoChatOAuthToolsFor<TSchema>(options.oauth));
+    tools.push(createStateValidationTool(options.oauth?.state));
 
     tools.push(
       createTool({

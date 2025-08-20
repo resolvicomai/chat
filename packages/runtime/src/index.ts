@@ -8,7 +8,11 @@ import {
   handleLogout,
   StateParser,
 } from "./auth.ts";
-import { createIntegrationBinding, workspaceClient } from "./bindings.ts";
+import {
+  createContractBinding,
+  createIntegrationBinding,
+  workspaceClient,
+} from "./bindings.ts";
 import { DECO_MCP_CLIENT_HEADER } from "./client.ts";
 import {
   createMCPServer,
@@ -16,10 +20,10 @@ import {
   MCPServer,
 } from "./mastra.ts";
 import { MCPClient, type QueryResult } from "./mcp.ts";
+import { State } from "./state.ts";
 import type { WorkflowDO } from "./workflow.ts";
 import { Workflow } from "./workflow.ts";
-import type { Binding, MCPBinding } from "./wrangler.ts";
-import { State } from "./state.ts";
+import type { Binding, ContractBinding, MCPBinding } from "./wrangler.ts";
 export {
   createMCPFetchStub,
   type CreateStubAPIOptions,
@@ -85,6 +89,7 @@ export interface UserDefaultExport<
 // 1. Map binding type to its interface
 interface BindingTypeMap {
   mcp: MCPBinding;
+  contract: ContractBinding;
 }
 
 export interface User {
@@ -119,6 +124,7 @@ type CreatorByType = {
 // 3. Strongly type creatorByType
 const creatorByType: CreatorByType = {
   mcp: createIntegrationBinding,
+  contract: createContractBinding,
 };
 
 const withDefaultBindings = ({
@@ -208,10 +214,12 @@ export const withBindings = <TEnv>({
 }): TEnv => {
   const env = _env as DefaultEnv<any>;
 
+  const apiUrl = env.DECO_CHAT_API_URL ?? "https://api.deco.chat";
   let context;
   if (typeof tokenOrContext === "string") {
     const decoded = decodeJwt(tokenOrContext);
     const workspace = decoded.aud as string;
+
     context = {
       state: decoded.state as Record<string, unknown>,
       token: tokenOrContext,
@@ -230,10 +238,7 @@ export const withBindings = <TEnv>({
       workspace: env.DECO_CHAT_WORKSPACE,
       ensureAuthenticated: (options?: { workspaceHint?: string }) => {
         const workspaceHint = options?.workspaceHint ?? env.DECO_CHAT_WORKSPACE;
-        const authUri = new URL(
-          "/apps/oauth",
-          env.DECO_CHAT_API_URL ?? "https://api.deco.chat",
-        );
+        const authUri = new URL("/apps/oauth", apiUrl);
         authUri.searchParams.set("client_id", env.DECO_CHAT_APP_NAME);
         authUri.searchParams.set(
           "redirect_uri",
@@ -363,4 +368,8 @@ export const withRuntime = <TEnv, TSchema extends z.ZodTypeAny = never>(
   };
 };
 
-export { type Migration, type WranglerConfig } from "./wrangler.ts";
+export {
+  type Contract,
+  type Migration,
+  type WranglerConfig,
+} from "./wrangler.ts";

@@ -25,6 +25,7 @@ import { bundler } from "./bundler.ts";
 import { assertsDomainUniqueness } from "./custom-domains.ts";
 import { type DeployResult, deployToCloudflare } from "./deployment.ts";
 import type { WranglerConfig } from "./wrangler.ts";
+import { AppName } from "../registry/api.ts";
 const uid = new ShortUniqueId({
   dictionary: "alphanum_lower",
   length: 10,
@@ -783,9 +784,8 @@ Important Notes:
           : undefined;
 
       const issuer = await JwtIssuer.forKeyPair(keyPair);
-      const appName = `@${
-        wranglerConfig?.scope ?? c.workspace.slug
-      }/${scriptSlug}`;
+      const scope = wranglerConfig?.scope ?? c.workspace.slug;
+      const appName = AppName.build(scope, scriptSlug);
 
       const token = await issuer.issue({
         sub: `app:${appName}`,
@@ -821,6 +821,19 @@ Important Notes:
         assets: assetFiles,
         _envVars: { ...envVars, ...appEnvVars },
       });
+      const client = MCPClient.forContext(c);
+
+      await Promise.all(
+        (result.contracts ?? []).map((contract) => {
+          return client.CONTRACT_REGISTER({
+            contract,
+            author: {
+              scope,
+              name: scriptSlug,
+            },
+          });
+        }),
+      );
 
       const data = await updateDatabase({
         c,
@@ -833,7 +846,6 @@ Important Notes:
         files: codeFiles,
       });
 
-      const client = MCPClient.forContext(c);
       await client
         .REGISTRY_PUBLISH_APP({
           name: scriptSlug,
