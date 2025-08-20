@@ -1,20 +1,18 @@
 [phases.setup]
-# Node + npm garantidos; Deno fica disponível (se o web usar)
+# Node + npm garantidos; Deno opcional
 nixPkgs = ["nodejs", "deno"]
 
 [phases.install]
-# Checagem de versões e instalação SOMENTE do frontend
+# Só instala o frontend; NÃO toca apps/api (que tem JSR direto)
 cmds = [
   "node -v && npm -v",
-  "npm --prefix apps/web ci --legacy-peer-deps || npm --prefix apps/web install --legacy-peer-deps"
+  "npm --prefix apps/web install --no-fund --no-audit --legacy-peer-deps"
 ]
 
 [phases.build]
-# Build do frontend → gera apps/web/dist
 cmds = [
   "npm --prefix apps/web run build"
 ]
 
 [start]
-# Sobe o Worker e serve os assets do dist
 cmd = "npx wrangler dev --config=./wrangler.toml --local --ip 0.0.0.0 --port $PORT"
