@@ -3,16 +3,21 @@
 nixPkgs = ["nodejs", "deno"]
 
 [phases.install]
-# Só instala o frontend; NÃO toca apps/api (que tem JSR direto)
+# 1) Mostra versões
+# 2) Força o npm a conhecer o registry JSR (independe de .npmrc)
+# 3) Instala o WEB dentro do diretório correto (sem usar --prefix)
 cmds = [
   "node -v && npm -v",
-  "npm --prefix apps/web install --no-fund --no-audit --legacy-peer-deps"
+  "npm config set @jsr:registry https://npm.jsr.io",
+  "bash -lc 'cd apps/web && npm install --no-fund --no-audit --legacy-peer-deps'"
 ]
 
 [phases.build]
+# Builda o frontend
 cmds = [
-  "npm --prefix apps/web run build"
+  "bash -lc 'cd apps/web && npm run build'"
 ]
 
 [start]
+# Sobe a API (Worker) e serve os assets do dist
 cmd = "npx wrangler dev --config=./wrangler.toml --local --ip 0.0.0.0 --port $PORT"
