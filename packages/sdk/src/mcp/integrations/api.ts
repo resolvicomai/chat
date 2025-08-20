@@ -40,7 +40,8 @@ import {
   WellKnownBindings,
 } from "../index.ts";
 import { listKnowledgeBases } from "../knowledge/api.ts";
-import { AppName, getRegistryApp, listRegistryApps } from "../registry/api.ts";
+import { AppName } from "../../common/index.ts";
+import { getRegistryApp, listRegistryApps } from "../registry/api.ts";
 import { createServerClient } from "../utils.ts";
 
 const SELECT_INTEGRATION_QUERY = `
@@ -736,7 +737,7 @@ export const DECO_INTEGRATION_OAUTH_START = createIntegrationManagementTool({
     assertHasWorkspace(c);
     await assertWorkspaceResourceAccess(c);
     let connection: MCPConnection;
-    if (provider === "marketplace") {
+    if (provider === MARKETPLACE_PROVIDER) {
       const app = await getRegistryApp.handler({ name: appName });
       connection = app.connection;
     } else {

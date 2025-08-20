@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
   FormControl,
   FormDescription,
@@ -17,9 +16,10 @@ import {
 import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form";
 import type { OptionItem } from "../index.tsx";
 import { IntegrationIcon } from "../../integrations/common.tsx";
-import { useMarketplaceIntegrations } from "@deco/sdk";
 import { Button } from "@deco/ui/components/button.tsx";
 import { useOptionsLoader } from "../../../hooks/use-options-loader.ts";
+import { Icon } from "@deco/ui/components/icon.tsx";
+import { useWorkspaceLink } from "../../../hooks/use-navigate-workspace.ts";
 
 interface TypeSelectFieldProps<T extends FieldValues = FieldValues> {
   name: string;
@@ -40,16 +40,8 @@ export function TypeSelectField<T extends FieldValues = FieldValues>({
   disabled,
   typeValue,
 }: TypeSelectFieldProps<T>) {
-  const { data: marketplace } = useMarketplaceIntegrations();
   const { data: options, isPending } = useOptionsLoader(typeValue);
-
-  const matchingIntegration = useMemo(
-    () =>
-      marketplace?.integrations.find(
-        (integration) => integration.name === typeValue,
-      ),
-    [marketplace, typeValue],
-  );
+  const workspaceLink = useWorkspaceLink();
 
   const selectedOption = options.find(
     // deno-lint-ignore no-explicit-any
@@ -60,7 +52,7 @@ export function TypeSelectField<T extends FieldValues = FieldValues>({
     e.preventDefault();
     e.stopPropagation();
     globalThis.open(
-      `/connections?installingIntegrationId=${matchingIntegration?.id}`,
+      workspaceLink(`/connections?appName=${typeValue}`),
       "_blank",
     );
   };
@@ -76,7 +68,7 @@ export function TypeSelectField<T extends FieldValues = FieldValues>({
             {isRequired && <span className="text-destructive ml-1">*</span>}
           </FormLabel>
           <div className="flex items-center gap-4">
-            {options.length > 0 ? (
+            <div className="flex items-center gap-4">
               <Select
                 onValueChange={(value: string) => {
                   // Update the form with an object containing the selected value
@@ -134,11 +126,10 @@ export function TypeSelectField<T extends FieldValues = FieldValues>({
                   ))}
                 </SelectContent>
               </Select>
-            ) : (
               <Button onClick={handleAddIntegration} variant="special">
-                Add integration
+                <Icon name="add" size={16} />
               </Button>
-            )}
+            </div>
           </div>
           {description && (
             <FormDescription className="text-xs text-muted-foreground">
