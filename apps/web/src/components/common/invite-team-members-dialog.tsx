@@ -586,10 +586,24 @@ export function InviteTeamMembersDialog({
     <>
       {wrappedTrigger}
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <Protect
-          check={(plan) => !plan.isAtSeatLimit}
-          fallback={<InviteTeamMembersDialogFeatureWall />}
-        >
+       {/* Self-host: convites sem checar limite de assentos */}
+<DialogHeader className="px-6 pt-6">
+  <DialogTitle>Invite members</DialogTitle>
+  <DialogDescription>
+    Invite teammates to collaborate with you.
+  </DialogDescription>
+</DialogHeader>
+
+<CreateInviteLinkForm
+  onSuccess={handleSuccess}
+  organizationName={organization.name}
+/>
+
+<DialogFooter className="px-6 pb-6">
+  <DialogClose asChild>
+    <Button variant="outline">Close</Button>
+  </DialogClose>
+</DialogFooter>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Invite members</DialogTitle>
