@@ -1,23 +1,21 @@
 [phases.setup]
-# Node + npm garantidos; Deno opcional
-nixPkgs = ["nodejs", "deno"]
+# Node + npm garantidos
+nixPkgs = ["nodejs"]
 
 [phases.install]
-# 1) Mostra versões
-# 2) Força o npm a conhecer o registry JSR (independe de .npmrc)
-# 3) Instala o WEB dentro do diretório correto (sem usar --prefix)
+# Instala no ROOT para linkar workspaces (inclui @deco/sdk local) e mapeia o JSR
 cmds = [
   "node -v && npm -v",
   "npm config set @jsr:registry https://npm.jsr.io",
-  "bash -lc 'cd apps/web && npm install --no-fund --no-audit --legacy-peer-deps'"
+  "npm install --workspaces --include-workspace-root --no-fund --no-audit --legacy-peer-deps"
 ]
 
 [phases.build]
-# Builda o frontend
+# Builda apenas o frontend (assets para o Wrangler)
 cmds = [
-  "bash -lc 'cd apps/web && npm run build'"
+  "npm run -w apps/web build"
 ]
 
 [start]
-# Sobe a API (Worker) e serve os assets do dist
+# Sobe o Worker da API e serve assets do dist
 cmd = "npx wrangler dev --config=./wrangler.toml --local --ip 0.0.0.0 --port $PORT"
