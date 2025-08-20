@@ -3,13 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "engines": {
-    "node": ">=20"
-  },
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=20" },
   "scripts": {
     "start": "npx wrangler dev --config ./wrangler.toml --local --ip 0.0.0.0 --port $PORT",
     "build": "npm run -w apps/web build",
@@ -25,5 +20,8 @@
     "typescript": "^5.8.3",
     "@types/node": "^22.10.6",
     "vitest": "3.2.4"
+  },
+  "overrides": {
+    "youch": "2.2.2"
   }
 }
