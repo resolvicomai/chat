@@ -1,71 +1,19 @@
 {
-  "name": "@deco/chat",
-  "private": true,
-  "version": "0.0.0",
+  "name": "meu-projeto",
+  "version": "1.0.0",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"cd apps/web && npm run dev\" \"cd apps/api && npm run dev\"",
-    "start": "cd apps/web && deno run --allow-net --allow-env main.ts",
-    "build": "cd apps/web && deno task build",
-    "docs:dev": "cd docs && npm run dev",
-    "docs:deploy": "cd docs && npm run deploy",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "deno lint --config ./package.json .",
-    "fmt": "biome format --write",
-    "fmt:check": "biome format",
-    "version": "tsc --version",
-    "check": "NODE_OPTIONS=--max-old-space-size=8192 tsc --noEmit",
-    "ui": "npx shadcn@latest add -c ./packages/ui",
-    "clean": "rm -f deno.lock package-lock.json bun.lock && rm -rf node_modules apps/*/node_modules packages/*/node_modules",
-    "db:repair": "supabase migration repair --status reverted",
-    "db:migration": "supabase migration up --linked --include-all",
-    "db:migration:create": "supabase migration new",
-    "npm:build": "npm run build --workspace=apps/web",
-    "db:types": "npx supabase gen types typescript --project-id ozksgdmyrqcxcwhnbepg --schema public > packages/sdk/src/storage/supabase/schema.ts"
+    "dev": "nodemon server.js",
+    "start": "node server.js"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "lib": [
-      "deno.window",
-      "dom",
-      "esnext",
-      "deno.ns",
-      "deno.unstable",
-      "dom.iterable"
-    ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
+  "dependencies": {
+    "express": "^4.18.2"
   },
-  "exclude": [
-    ".github/",
-    "**/.wrangler",
-    "apps/web/public/**",
-    "packages/runtime/src/cf-imports.ts",
-    "docs/server/**",
-    "docs/view/**"
-  ],
-  "lock": false,
-  "unstable": [
-    "kv",
-    "raw-imports"
-  ],
   "devDependencies": {
-    "@biomejs/biome": "2.1.2",
-    "supabase": "^2.22.12",
-    "concurrently": "^9.2.0",
-    "typescript": "^5.8.3",
-    "@types/node": "^22.10.6",
-    "vitest": "3.2.4"
+    "nodemon": "^3.0.2"
   },
-  "lint": {
-    "plugins": [
-      "./plugins/ensure-tailwind-design-system-tokens.ts",
-      "./plugins/enforce-kebab-case-file-names.ts"
-    ]
+  "engines": {
+    "node": "18.x"
   }
 }
