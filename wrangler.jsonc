@@ -1,0 +1,7 @@
+// wrangler.jsonc (na raiz do repo)
+{
+  "name": "resolvi-chat",
+  "main": "server/main.ts",              // ajuste se o seu main estiver noutro caminho
+  "compatibility_date": "2025-08-20",
+  "assets": { "directory": "view/dist" } // se sua UI builda em view/dist
+}
