@@ -1,21 +1,20 @@
 [phases.setup]
-# Instala Node 20 (com npm) e Deno (opcional; não quebra)
-nixPkgs = ["nodejs_20", "deno"]
+# Node + npm garantidos; Deno fica disponível (se o web usar)
+nixPkgs = ["nodejs", "deno"]
 
 [phases.install]
-# Garante que npm/node estão disponíveis e instala dependências das subpastas
+# Checagem de versões e instalação SOMENTE do frontend
 cmds = [
   "node -v && npm -v",
-  "npm --prefix apps/api ci --legacy-peer-deps || npm --prefix apps/api install --legacy-peer-deps",
   "npm --prefix apps/web ci --legacy-peer-deps || npm --prefix apps/web install --legacy-peer-deps"
 ]
 
 [phases.build]
-# Build do frontend (gera apps/web/dist)
+# Build do frontend → gera apps/web/dist
 cmds = [
   "npm --prefix apps/web run build"
 ]
 
 [start]
-# Sobe o Worker (API) e serve os assets do build
+# Sobe o Worker e serve os assets do dist
 cmd = "npx wrangler dev --config=./wrangler.toml --local --ip 0.0.0.0 --port $PORT"
