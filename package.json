@@ -1,19 +1,26 @@
 {
-  "name": "meu-projeto",
-  "version": "1.0.0",
-  "main": "server.js",
+  "name": "@deco/chat",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "nodemon server.js",
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2"
+    "start": "npx wrangler dev --config ./wrangler.toml --local --ip 0.0.0.0 --port $PORT",
+    "build": "npm run -w apps/web build",
+    "dev": "concurrently \"cd apps/web && npm run dev\" \"cd apps/api && npm run dev\"",
+    "lint": "deno lint --config ./package.json .",
+    "fmt": "biome format --write",
+    "fmt:check": "biome format",
+    "check": "NODE_OPTIONS=--max-old-space-size=8192 tsc --noEmit"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
-  },
-  "engines": {
-    "node": "18.x"
+    "@biomejs/biome": "2.1.2",
+    "concurrently": "^9.2.0",
+    "typescript": "^5.8.3",
+    "@types/node": "^22.10.6",
+    "vitest": "3.2.4"
   }
 }
