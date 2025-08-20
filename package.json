@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"cd apps/web && npm run dev\" \"cd apps/api && npm run dev\"",
+    "start": "cd apps/web && deno run --allow-net --allow-env main.ts",
+    "build": "cd apps/web && deno task build",
     "docs:dev": "cd docs && npm run dev",
     "docs:deploy": "cd docs && npm run deploy",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "PWD=$PWD/apps/web deno run build",
     "lint": "deno lint --config ./package.json .",
     "fmt": "biome format --write",
     "fmt:check": "biome format",
