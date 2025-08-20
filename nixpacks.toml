@@ -1,0 +1,20 @@
+[phases.setup]
+# Instala binários extras pelo Nix (Deno é opcional aqui; mantive por segurança)
+nixPkgs = ["deno"]
+
+[phases.install]
+# Instala dependências onde elas realmente estão
+cmds = [
+  "npm --prefix apps/api ci --legacy-peer-deps",
+  "npm --prefix apps/web ci --legacy-peer-deps"
+]
+
+[phases.build]
+# Faz o build do frontend (gera apps/web/dist)
+cmds = [
+  "npm --prefix apps/web run build"
+]
+
+[start]
+# Sobe o worker + assets, escutando a porta da Railway
+cmd = "npx wrangler dev --config wrangler.toml --local --ip 0.0.0.0 --port $PORT"
